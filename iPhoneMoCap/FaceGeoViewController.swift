@@ -42,12 +42,25 @@ class FaceGeoViewController: UIViewController, ARSessionDelegate, SocketControll
             // Reduce all of the blend shapes into a message delimited by a |
             let message = $0.reduce("", {
                 result, input in
-                result.appending("\(input.key.rawValue) - \(Int(input.value.doubleValue * 100))|")
+                result.appending("\(input.key.rawValue) , \(Int(input.value.doubleValue * 100))|")
             })
             
-            self.socketController?.sendMessage(message: message)
+            //retrive position and rotation (transform)
+            let faceAnchorTransform: simd_float4x4 = self.blendShapeTracker.faceAnchorTransform
+            var transformMessage = ""
+            for x in 0..<4{
+                for y in 0..<4{
+                    transformMessage = transformMessage.appending((faceAnchorTransform[x][y] * 100.0).description);
+                    if (x != 3 || y != 3){
+                        transformMessage = transformMessage.appending(",");
+                    }
+                }
+            }
+            
+            let finalMessage = message + "transformMatrix," + transformMessage;
+
+            self.socketController?.sendMessage(message: finalMessage)
         }
-        
         
         sceneView.snp.makeConstraints {
             make in
